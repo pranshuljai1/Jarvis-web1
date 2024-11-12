@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Jarvis AI</h1>
+        <p id="greeting"></p>
+
+        <!-- Option to choose input method -->
+        <div>
+            <button onclick="toggleInputMethod()">Switch to Mic Input</button>
+        </div>
+
+        <!-- Keyboard Input -->
+        <div id="keyboardInput" style="display: block;">
+            <input type="text" id="commandInput" placeholder="Ask Jarvis...">
+            <button onclick="sendCommand()">Submit</button>
+        </div>
+
+        <!-- Mic Input -->
+        <div id="micInput" style="display: none;">
+            <button onclick="startMicListening()">Start Listening</button>
+        </div>
+
+        <p id="response"></p>
+    </div>
+
+    <script>
+        // Fetch greeting from Flask backend when the page loads
+        window.onload = function() {
+            fetch('/greet')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("greeting").innerText = data.greeting;
+                });
+        };
+
+        // Send keyboard command to backend
+        function sendCommand() {
+            var command = document.getElementById("commandInput").value;
+
+            fetch('/command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'command=' + command
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("response").innerText = data.response;
+
+                // Handle playing song by redirecting
+                if (data.url) {
+                    window.open(data.url, '_blank');
+                }
+            });
+        }
+
+        // Toggle between keyboard and mic input
+        function toggleInputMethod() {
+            var keyboardInput = document.getElementById("keyboardInput");
+            var micInput = document.getElementById("micInput");
+            var button = document.querySelector("button");
+
+            if (keyboardInput.style.display === "none") {
+                keyboardInput.style.display = "block";
+                micInput.style.display = "none";
+                button.innerText = "Switch to Mic Input";
+            } else {
+                keyboardInput.style.display = "none";
+                micInput.style.display = "block";
+                button.innerText = "Switch to Keyboard Input";
+            }
+        }
+
+        // Start mic listening
+        function startMicListening() {
+            fetch('/mic', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("response").innerText = data.response;
+            });
+        }
+    </script>
+</body>
+</html>
